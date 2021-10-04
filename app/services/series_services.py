@@ -4,6 +4,12 @@ from app.services.configs import configs
 from app.exc.exc import IdNotFound
 
 
+def close(cur, conn):
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 def create_table():
     conn = psycopg2.connect(**configs)
     cur = conn.cursor()
@@ -21,9 +27,7 @@ def create_table():
         """
     )
     cur.execute(query)
-    conn.commit()
-    cur.close()
-    conn.close()
+    close(cur, conn)
 
 
 class Series():
@@ -64,12 +68,9 @@ class Series():
         cur.execute(query)
         fetch_result = cur.fetchone()
 
-        conn.commit()
-        cur.close()
-        conn.close()
+        close(cur, conn)
 
         serialized_data = dict(zip(keys, fetch_result))
-
         return serialized_data
 
     def get_all():
@@ -81,17 +82,12 @@ class Series():
         ]
 
         cur.execute(""" SELECT * FROM ka_series; """)
-
         fetch_result = cur.fetchall()
-
-        conn.commit()
-        cur.close()
-        conn.close()
+        close(cur, conn)
 
         serialized_data = [
             dict(zip(columns, serie_data)) for serie_data in fetch_result
         ]
-
         return {"data": serialized_data}
 
     def get_by_id(series_id: int):
@@ -118,9 +114,7 @@ class Series():
         if not fetch_result:
             raise IdNotFound("Not found.")
 
-        conn.commit()
-        cur.close()
-        conn.close()
+        close(cur, conn)
 
         serialized_data = {"data": dict(zip(columns, fetch_result))}
 
